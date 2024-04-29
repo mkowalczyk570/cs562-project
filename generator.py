@@ -17,32 +17,32 @@ def main():
         print("for values with multiple inputs please separate by commas")
         S = ""
         while S == "":
-            S = input("Enter the value of S: ")
+            S = input("Enter select attributes: ")
         S = S.split(",")
 
         n = ""
         while n == "":
-            n = input("Enter the value of n: ")
+            n = input("Enter number of grouping variables: ")
         n = n.split(",")
 
         v = ""
         while v == "":
-            v = input("Enter the value of v: ")
+            v = input("Enter grouping attributes: ")
         v = v.split(",")
 
         F = ""
         while F == "":
-            F = input("Enter the value of F: ")
+            F = input("Enter aggregate functions: ")
         F = F.replace("[", "")
         F = F.replace("]", "")
         F = F.split(",")
 
         sig = ""
         while sig == "":
-            sig = input("Enter the value of sig: ")
+            sig = input("Enter predicates: ")
         sig = sig.split(",")
 
-        G = input("Enter the value of G(optional): ")
+        G = input("Enter having clause(optional): ")
         G = G.split(",") if G != "" else []
     else:
         print("Using file for input values")
@@ -50,28 +50,55 @@ def main():
         with open(input_file, 'r') as f:
             for line in f:
                 ## save each line as operator of phi
-                print(line, end='')
+                # split line into attributes
+                attributes = line.strip().split(",")
+                if len(attributes) == 5 or len(attributes) == 6:
+                    S = attributes[0]
+                    n = attributes[1]
+                    v = attributes[2]
+                    F = attributes[3]
+                    sig = attributes[4]
+                    G = attributes[5] if len(attributes) == 6 else []
+                else:
+                    print("Invalid input")
+                    break
 
     
     
-    ### Create MF Structure - holds grouping attributes (v) and aggregation functions (F)
-    MF_struct = {};
+    ### Create H-Table - holds grouping attributes (v) and aggregation functions (F)
+    H_table= {};
+    grouping_attributes = []
 
     for i in range(len(v)):
-        name = "grouping_attribute_" + str(i)
-        MF_struct[name] = v[i]
+        grouping_attributes.append(v[i])
 
-    for i in range(len(F)):
-        name = "aggregation_function_" + str(i)
-        MF_struct[name] = F[i]
-
-    print(MF_struct)
+    # for i in range(len(F)):
+    #     name = "aggregation_function_" + str(i)
+    #     MF_struct[name] = F[i]
     
     
     ### iterate through the rows in table
     for row in cur:
-        if row['quant'] > 10:
-            _global.append(row)
+        # create a tuple of the grouping attributes
+        for attr in grouping_attributes:
+            key = row[attr] 
+
+        if key not in H_table:
+            # if row contains a new combination of grouping attributes
+            # add the grouping attributes to the H_table
+            # initialize 0th grouping variable (assuming it's 0)
+            H_table[key] = 0
+        else:
+            # update the 0th grouping variable
+            H_table[key] += 1
+
+    print(H_table)
+
+    ### scan the table n times tocompute the aggregation functions of N grouping variables
+    for i in range(n):
+        # iterate through the rows in table
+        for row in cur:
+            #if row satisfies the defining condition of the ith grouping variable
     """
 
     # Note: The f allows formatting with variables.
