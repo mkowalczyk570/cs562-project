@@ -83,31 +83,64 @@ def query():
     ### Create H-Table - holds grouping attributes (v) and aggregation functions (F)
     H_table= {};
     grouping_attributes = []
+    aggregates = []
 
     for i in range(len(v)):
         grouping_attributes.append(v[i])
 
     # for i in range(len(F)):
-    #     name = "aggregation_function_" + str(i)
-    #     MF_struct[name] = F[i]
-    
+    #     val = F[i].split("_")
+    #     if val != "":
+    #         aggregates.append(val[0])
     
     ### iterate through the rows in table
     for row in cur:
         # create a tuple of the grouping attributes
+        attributes = []
         for attr in grouping_attributes:
-            key = row[attr] 
+            key = row[attr].lower()
+            attributes.append(key)
+        
+        key = tuple(attributes)
 
         if key not in H_table:
             # if row contains a new combination of grouping attributes
             # add the grouping attributes to the H_table
             # initialize 0th grouping variable (assuming it's 0)
-            H_table[key] = 0
-        else:
+    
+            
+            for a in F[0]:
+                a = a.split("_")                
+                if a[0] == "min":
+                    H_table[key] = 0
+                if a[0] == "max":
+                    H_table[key] = 0
+                if a[0] == "sum":
+                    H_table[key] = 0
+                if a[0] == "avg":
+                    H_table[key] = 0
+                if a[0] == "count":
+                    H_table[key] = 0
+        #else:
             # update the 0th grouping variable
-            H_table[key] += 1
+            # if key == "min" :
+            #     if(row["sales"] < H_table[key]):
+            # if key == "max":
+            #     if(row["sales"] > H_table[key]):
+            # if key == "sum":
+            #     if
+            # if key == "avg":
+            #     if
+            # if key == "count":
+            #     H_table[key] += 1
 
-    print(H_table)
+    ### scan the table n times tocompute the aggregation functions of N grouping variables
+    # for i in range(n):
+    #     # iterate through the rows in table
+    #     for row in cur:
+    #         #if row satisfies the defining condition of the ith grouping variable
+    #         if row[i] > 0:
+    #             # get the row in H_table that matches ROW in sales table
     
 
     ### get 6 phi operators
