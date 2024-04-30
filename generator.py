@@ -99,6 +99,8 @@ def main():
         # iterate through the rows in table
         for row in cur:
             #if row satisfies the defining condition of the ith grouping variable
+            if row[i] > 0:
+                # get the row in H_table that matches ROW in sales table
     """
 
     # Note: The f allows formatting with variables.
