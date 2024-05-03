@@ -73,6 +73,7 @@ def main():
     for i in range(len(v)):
         grouping_attributes.append(v[i])
 
+
     # for i in range(len(F)):
     #     val = F[i].split("_")
     #     if val != "":
@@ -94,21 +95,26 @@ def main():
             # initialize 0th grouping variable (assuming it's 0)
     
             for a in F[0]:
+                count = 0
+                inner_key = a
                 a = a.split("_")                
                 if a[0] == "min":
-                    H_table[key] = row[a[1]]
+                    H_table[key] = {inner_key: row[a[1]]}
                 if a[0] == "max":
-                    H_table[key] = row[a[1]]
+                    H_table[0] = row[a[1]]
                 if a[0] == "sum":
-                    H_table[key] = row[a[1]]
+                    H_table[0] = row[a[1]]
                 if a[0] == "avg":
-                    H_table[key] = row[a[1]]
+                    H_table[0] = row[a[1]]
                 if a[0] == "count":
-                    H_table[key] = 1
+                    H_table[0] = 1
         else:
             # update the 0th grouping variable
             for a in F[0]:
-                a = a.split("_")                
+                loc = H_table.index(key)
+                print(loc)
+                a = a.split("_")    
+                count += 1            
                 if a[0] == "min":
                     H_table[key] = min(row[a[1]], H_table[key])
                 if a[0] == "max":
@@ -116,17 +122,23 @@ def main():
                 if a[0] == "sum":
                     H_table[key] += row[a[1]]
                 if a[0] == "avg":
+                    # incremental average
+                    # avg = prev_avg + (new_val - prev_avg) / count
+
+                    H_table[key] = H_table[key-1] + (row[a[1]] - H_table[key-1]) / count
                     H_table[key] = 0
                 if a[0] == "count":
-                    H_table[key] += 1
+                    H_table[key] = count
 
-    ### scan the table n times tocompute the aggregation functions of N grouping variables
-    # for i in range(n):
-    #     # iterate through the rows in table
-    #     for row in cur:
-    #         #if row satisfies the defining condition of the ith grouping variable
-    #         if row[i] > 0:
-    #             # get the row in H_table that matches ROW in sales table
+    ### scan the table n times to compute the aggregation functions of N grouping variables
+    for i in range(n):
+        # iterate through the rows in table
+        for row in cur:
+            #if row satisfies the defining condition of the ith grouping variable
+
+            # condition
+
+
     """
 
     # Note: The f allows formatting with variables.

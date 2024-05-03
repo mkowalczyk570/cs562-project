@@ -88,6 +88,7 @@ def query():
     for i in range(len(v)):
         grouping_attributes.append(v[i])
 
+
     # for i in range(len(F)):
     #     val = F[i].split("_")
     #     if val != "":
@@ -108,31 +109,40 @@ def query():
             # add the grouping attributes to the H_table
             # initialize 0th grouping variable (assuming it's 0)
     
-            
             for a in F[0]:
+                count = 0
                 a = a.split("_")                
                 if a[0] == "min":
-                    H_table[key] = 0
+                    H_table[0] = row[a[1]]
                 if a[0] == "max":
-                    H_table[key] = 0
+                    H_table[0] = row[a[1]]
                 if a[0] == "sum":
-                    H_table[key] = 0
+                    H_table[0] = row[a[1]]
                 if a[0] == "avg":
+                    H_table[0] = row[a[1]]
+                if a[0] == "count":
+                    H_table[0] = 1
+        else:
+            # update the 0th grouping variable
+            for a in F[0]:
+                loc = H_table.index(key)
+                print(loc)
+                a = a.split("_")    
+                count += 1            
+                if a[0] == "min":
+                    H_table[key] = min(row[a[1]], H_table[key])
+                if a[0] == "max":
+                    H_table[key] = max(row[a[1]], H_table[key])
+                if a[0] == "sum":
+                    H_table[key] += row[a[1]]
+                if a[0] == "avg":
+                    # incremental average
+                    # avg = prev_avg + (new_val - prev_avg) / count
+
+                    H_table[key] = H_table[key-1] + (row[a[1]] - H_table[key-1]) / count
                     H_table[key] = 0
                 if a[0] == "count":
-                    H_table[key] = 0
-        #else:
-            # update the 0th grouping variable
-            # if key == "min" :
-            #     if(row["sales"] < H_table[key]):
-            # if key == "max":
-            #     if(row["sales"] > H_table[key]):
-            # if key == "sum":
-            #     if
-            # if key == "avg":
-            #     if
-            # if key == "count":
-            #     H_table[key] += 1
+                    H_table[key] = count
 
     ### scan the table n times tocompute the aggregation functions of N grouping variables
     # for i in range(n):
