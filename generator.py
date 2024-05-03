@@ -23,24 +23,26 @@ def main():
         n = ""
         while n == "":
             n = input("Enter number of grouping variables: ")
-        n = n.split(",")
+        #n = n.split(",")
+        n = int(n)
 
         v = ""
         while v == "":
             v = input("Enter grouping attributes: ")
         v = v.split(",")
 
-        F = ""
-        while F == "":
-            F = input("Enter aggregate functions: ")
-        F = F.replace("[", "")
-        F = F.replace("]", "")
-        F = F.split(",")
+        F = []
+        for i in range(n+1):
+            func = input("Enter aggregate functions for x_{}: ".format(i))
+            func = func.split(",")
+            F.append(func)
 
-        sig = ""
-        while sig == "":
-            sig = input("Enter predicates: ")
-        sig = sig.split(",")
+        sig = []
+        for i in range(1, n+1):
+            pred = input("Enter predicates for x_{}: ".format(i))
+            pred = pred.split("and")
+            sig.append(pred)
+        print(sig)
 
         G = input("Enter having clause(optional): ")
         G = G.split(",") if G != "" else []
@@ -64,7 +66,6 @@ def main():
                     break
 
     
-    
     ### Create H-Table - holds grouping attributes (v) and aggregation functions (F)
     H_table= {};
     grouping_attributes = []
@@ -84,6 +85,7 @@ def main():
         # create a tuple of the grouping attributes
         attributes = []
         for attr in grouping_attributes:
+            attr = attr.strip()
             key = row[attr].lower()
             attributes.append(key)
         
@@ -93,50 +95,51 @@ def main():
             # if row contains a new combination of grouping attributes
             # add the grouping attributes to the H_table
             # initialize 0th grouping variable (assuming it's 0)
+
+            H_table[key] = {}
     
             for a in F[0]:
                 count = 0
                 inner_key = a
-                a = a.split("_")                
+                a = a.split("_")    
+                if inner_key not in H_table[key]: 
+                    H_table[key][inner_key] = {}        
                 if a[0] == "min":
-                    H_table[key] = {inner_key: row[a[1]]}
+                    H_table[key][inner_key] = row[a[1]]
                 if a[0] == "max":
-                    H_table[0] = row[a[1]]
+                    H_table[key][inner_key] = row[a[1]]
                 if a[0] == "sum":
-                    H_table[0] = row[a[1]]
+                    H_table[key][inner_key] = row[a[1]]
                 if a[0] == "avg":
-                    H_table[0] = row[a[1]]
+                    H_table[key][inner_key] = row[a[1]]
                 if a[0] == "count":
-                    H_table[0] = 1
+                    H_table[key][inner_key] = 1
         else:
             # update the 0th grouping variable
             for a in F[0]:
-                loc = H_table.index(key)
-                print(loc)
                 a = a.split("_")    
                 count += 1            
                 if a[0] == "min":
-                    H_table[key] = min(row[a[1]], H_table[key])
+                    H_table[key][inner_key] = min(row[a[1]], H_table[key][inner_key])
                 if a[0] == "max":
-                    H_table[key] = max(row[a[1]], H_table[key])
+                    H_table[key][inner_key] = max(row[a[1]], H_table[key][inner_key])
                 if a[0] == "sum":
-                    H_table[key] += row[a[1]]
+                    H_table[key][inner_key] += row[a[1]]
                 if a[0] == "avg":
                     # incremental average
                     # avg = prev_avg + (new_val - prev_avg) / count
 
-                    H_table[key] = H_table[key-1] + (row[a[1]] - H_table[key-1]) / count
-                    H_table[key] = 0
+                    H_table[key][inner_key] = H_table[key][inner_key] + (row[a[1]] - H_table[key][inner_key]) / count
                 if a[0] == "count":
-                    H_table[key] = count
-
+                    H_table[key][inner_key] = count
+    
     ### scan the table n times to compute the aggregation functions of N grouping variables
-    for i in range(n):
-        # iterate through the rows in table
-        for row in cur:
-            #if row satisfies the defining condition of the ith grouping variable
+    # for i in range(n):
+    #     # iterate through the rows in table
+    #     for row in cur:
+    #         #if row satisfies the defining condition of the ith grouping variable
 
-            # condition
+    #         # condition
 
 
     """
