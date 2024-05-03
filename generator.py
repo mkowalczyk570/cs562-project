@@ -42,7 +42,7 @@ def main():
             pred = input("Enter predicates for x_{}: ".format(i))
             pred = pred.split("and")
             sig.append(pred)
-        print(sig)
+        #print(sig)
 
         G = input("Enter having clause(optional): ")
         G = G.split(",") if G != "" else []
@@ -50,20 +50,44 @@ def main():
         print("Using file for input values")
         input_file = input("Enter the name of the file: ")
         with open(input_file, 'r') as f:
-            for line in f:
-                ## save each line as operator of phi
-                # split line into attributes
-                attributes = line.strip().split(",")
-                if len(attributes) == 5 or len(attributes) == 6:
-                    S = attributes[0]
-                    n = attributes[1]
-                    v = attributes[2]
-                    F = attributes[3]
-                    sig = attributes[4]
-                    G = attributes[5] if len(attributes) == 6 else []
-                else:
-                    print("Invalid input")
-                    break
+            S_line = f.readline()
+            S = S_line.strip().replace(" ", "").split(",")
+
+            n = int(f.readline().strip())
+
+            v_line = f.readline()
+            v = v_line.strip().replace(" ", "").split(",")
+
+            F = []
+            for i in range(n+1):
+                f_line = f.readline().replace(" ", "").strip()
+                F.append(f_line)
+            
+            sig = []
+            for i in range(n-1):
+                sig_line = f.readline().strip()
+                sig.append(re.split(r' (and|or) ', sig_line, flags=re.IGNORECASE))
+            print(sig)
+            
+            G = ""
+            g_line = f.readline()
+            if g_line != "":
+                G = g_line.strip()
+            
+            # for line in f:
+            #     ## save each line as operator of phi
+            #     # split line into attributes
+            #     attributes = line.strip().split(",")
+            #     if len(attributes) == 5 or len(attributes) == 6:
+            #         S = attributes[0]
+            #         n = attributes[1]
+            #         v = attributes[2]
+            #         F = attributes[3]
+            #         sig = attributes[4]
+            #         G = attributes[5] if len(attributes) == 6 else []
+            #     else:
+            #         print("Invalid input")
+            #         break
 
     
     ### Create H-Table - holds grouping attributes (v) and aggregation functions (F)
@@ -133,13 +157,21 @@ def main():
                 if a[0] == "count":
                     H_table[key][inner_key] = count
     
+    
     ### scan the table n times to compute the aggregation functions of N grouping variables
-    # for i in range(n):
-    #     # iterate through the rows in table
-    #     for row in cur:
-    #         #if row satisfies the defining condition of the ith grouping variable
-
-    #         # condition
+    for i in range(n):
+        cur.execute("SELECT * FROM sales")
+        # iterate through the rows in table
+        for row in cur:
+            #if row satisfies the defining condition of the ith grouping variable
+            # get condition for ith grouping variable
+            condition = sig # EX: ['1.state="NY"', '1.cust="dan"']
+            print(condition)
+            for pred in condition:
+                single_pred = pred[0].split("and")
+                col = single_pred[0].split("=")[1].strip()
+                print(col)
+                
 
 
     """
@@ -150,6 +182,7 @@ def main():
 import os
 import psycopg2
 import psycopg2.extras
+import re
 import tabulate
 from dotenv import load_dotenv
 

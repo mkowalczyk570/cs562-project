@@ -1,0 +1,9 @@
+cust,prod, sum_1_quant, sum_2_quant
+2
+cust, prod
+
+sum_1_quant
+sum_2_quant
+1.state="NY" and 1.cust = "dan"
+2.state="NJ" and 2.cust="claire"
+
