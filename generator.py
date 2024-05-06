@@ -1,4 +1,6 @@
 import subprocess
+import re
+
 
 
 def main():
@@ -9,6 +11,21 @@ def main():
     """
 
     body = """
+
+    def eval(pred, cur):
+    # This function should take in a predicate and evaluate it. It should return True or False.
+        pred = pred.split(".")[1]
+        att = re.split(r'(<=|>=|!=|<|>|=)', pred)
+
+        # col_names = [desc[0] for desc in cur.description]
+
+        # if att[2] in col_names:
+        #     # handling a grouping variable
+        #     ## group by prod --> prod = current prod being grouped
+        #     att[2] = cur[]
+
+        return att
+
     ### get 6 phi operators
 
     manual = input("Do you want to manually enter input values of phi? (y/n): ")
@@ -64,10 +81,9 @@ def main():
                 F.append(f_line)
             
             sig = []
-            for i in range(n-1):
+            for i in range(n):
                 sig_line = f.readline().strip()
                 sig.append(re.split(r' (and|or) ', sig_line, flags=re.IGNORECASE))
-            print(sig)
             
             G = ""
             g_line = f.readline()
@@ -162,16 +178,101 @@ def main():
     for i in range(n):
         cur.execute("SELECT * FROM sales")
         # iterate through the rows in table
+        result = []
+        predicates = []
+        evaluated = False
+        isAnd = False
+        isOr = False
+        condition = sig
+        # 1. get list of all evaluated predicates
+        # 2. Scan through table
+        # 3. for each row, check row against each predicate (stopping when any is false for AND; stopping when any is true for OR)
+        for pred in condition[i]:
+            if not evaluated:
+                pred_eval = eval(pred, cur)
+                predicates.append(pred_eval)
+                evaluated = True
+            else:
+                # check and vs or
+                if pred == "and": isAnd = True
+                elif pred == "or": isOr = True
+                evaluated = False
+
         for row in cur:
-            #if row satisfies the defining condition of the ith grouping variable
-            # get condition for ith grouping variable
-            condition = sig # EX: ['1.state="NY"', '1.cust="dan"']
-            print(condition)
-            for pred in condition:
-                single_pred = pred[0].split("and")
-                col = single_pred[0].split("=")[1].strip()
-                print(col)
-                
+            for key in H_table.keys():
+                isTrue = isAnd
+                for pred_eval in predicates:
+                    #check for grouping variable
+                    col_names = [desc[0] for desc in cur.description]
+                    
+                    if pred_eval[2] in col_names:
+                        index = col_names.index(pred_eval[2])
+                        pred_eval[2] = key[index]
+                        print(pred_eval[2])
+                    if(pred_eval[1] == "="):
+                        if isAnd:
+                            if row[pred_eval[0]] != pred_eval[2]: 
+                                isTrue = False
+                                break 
+                        elif isOr:
+                            if row[pred_eval[0]] == pred_eval[2]: #true
+                                isTrue = True
+                                break
+                    elif(pred_eval[1] == "<"):
+                        if isAnd:
+                            if row[pred_eval[0]] > pred_eval[2]: 
+                                isTrue = False
+                                break 
+                        elif isOr:
+                            if row[pred_eval[0]] < pred_eval[2]: #true
+                                IsTrue = True
+                                break
+                    elif(pred_eval[1] == ">"):
+                        if isAnd:
+                            if row[pred_eval[0]] < pred_eval[2]: 
+                                isTrue = False
+                                break 
+                        elif isOr:
+                            if row[pred_eval[0]] > pred_eval[2]: #true
+                                isTrue = True
+                                break
+                    elif(pred_eval[1] == "<="):
+                        if isAnd:
+                            if row[pred_eval[0]] > pred_eval[2]: 
+                                isTrue = False
+                                break 
+                        elif isOr:
+                            if row[pred_eval[0]] <= pred_eval[2]: #true
+                                isTrue = True
+                                break
+                    elif(pred_eval[1] == ">="):
+                        if isAnd:
+                            if row[pred_eval[0]] < pred_eval[2]: 
+                                isTrue = False
+                                break 
+                        elif isOr:
+                            if row[pred_eval[0]] >= pred_eval[2]: #true
+                                isTrue = True
+                                break
+                    elif(pred_eval[1] == "!="):
+                        if isAnd:
+                            if row[pred_eval[0]] == pred_eval[2]: #false
+                                isTrue = False
+                                break 
+                        elif isOr:
+                            if row[pred_eval[0]] != pred_eval[2]: #true
+                                isTrue = True
+                                break
+                if not isTrue:
+                    continue
+                result.append(row)
+            #update H_table
+        #print(result)  
+
+
+        # HAVING Clause
+        # iterate through results
+        # whatever matches the having clause update value in H_table
 
 
     """
@@ -185,6 +286,7 @@ import psycopg2.extras
 import re
 import tabulate
 from dotenv import load_dotenv
+import numpy as np
 
 # DO NOT EDIT THIS FILE, IT IS GENERATED BY generator.py
 

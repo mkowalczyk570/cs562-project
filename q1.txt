@@ -4,6 +4,6 @@ cust, prod
 
 sum_1_quant
 sum_2_quant
-1.state="NY" and 1.cust = "dan"
-2.state="NJ" and 2.cust="claire"
-
+1.state=NY and 1.cust=Dan and 1.prod=prod
+2.state=NJ and 2.cust=Claire and 2.prod=prod
+1.quant>2.quant
