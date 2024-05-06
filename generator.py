@@ -35,34 +35,35 @@ def main():
         S = ""
         while S == "":
             S = input("Enter select attributes: ")
-        S = S.split(",")
+        S = S.strip().replace(" ", "").split(",")
 
         n = ""
         while n == "":
             n = input("Enter number of grouping variables: ")
         #n = n.split(",")
-        n = int(n)
+        n = int(n.strip())
 
         v = ""
         while v == "":
             v = input("Enter grouping attributes: ")
-        v = v.split(",")
+        v = v.strip().replace(" ", "").split(",")
 
         F = []
         for i in range(n+1):
             func = input("Enter aggregate functions for x_{}: ".format(i))
-            func = func.split(",")
+            func = func.replace(" ", "").strip().split(",")
             F.append(func)
 
         sig = []
         for i in range(1, n+1):
-            pred = input("Enter predicates for x_{}: ".format(i))
-            pred = pred.split("and")
-            sig.append(pred)
+            sig_line = input("Enter predicates for x_{}: ".format(i))
+            sig_line = sig_line.strip()
+            sig.append(re.split(r' (and|or) ', sig_line, flags=re.IGNORECASE))
         #print(sig)
 
         G = input("Enter having clause(optional): ")
-        G = G.split(",") if G != "" else []
+        # G = G.split(",") if G != "" else []
+        if G != "": G = re.split(r' (and|or) ', G.strip(), flags=re.IGNORECASE)
     else:
         print("Using file for input values")
         input_file = input("Enter the name of the file: ")
@@ -77,7 +78,7 @@ def main():
 
             F = []
             for i in range(n+1):
-                f_line = f.readline().replace(" ", "").strip()
+                f_line = f.readline().replace(" ", "").strip().split(",")
                 F.append(f_line)
             
             sig = []
@@ -88,7 +89,7 @@ def main():
             G = ""
             g_line = f.readline()
             if g_line != "":
-                G = g_line.strip()
+                G = re.split(r' (and|or) ', g_line.strip(), flags=re.IGNORECASE)
             
             # for line in f:
             #     ## save each line as operator of phi
@@ -126,7 +127,7 @@ def main():
         attributes = []
         for attr in grouping_attributes:
             attr = attr.strip()
-            key = row[attr].lower()
+            key = row[attr]
             attributes.append(key)
         
         key = tuple(attributes)
@@ -139,11 +140,10 @@ def main():
             H_table[key] = {}
     
             for a in F[0]:
-                count = 0
                 inner_key = a
-                a = a.split("_")    
+                a = a.split("_")
                 if inner_key not in H_table[key]: 
-                    H_table[key][inner_key] = {}        
+                    H_table[key][inner_key] = {}
                 if a[0] == "min":
                     H_table[key][inner_key] = row[a[1]]
                 if a[0] == "max":
@@ -151,14 +151,15 @@ def main():
                 if a[0] == "sum":
                     H_table[key][inner_key] = row[a[1]]
                 if a[0] == "avg":
+                    H_table[key][inner_key + "_count"] = 1
                     H_table[key][inner_key] = row[a[1]]
                 if a[0] == "count":
                     H_table[key][inner_key] = 1
         else:
             # update the 0th grouping variable
             for a in F[0]:
+                inner_key = a
                 a = a.split("_")    
-                count += 1            
                 if a[0] == "min":
                     H_table[key][inner_key] = min(row[a[1]], H_table[key][inner_key])
                 if a[0] == "max":
@@ -169,9 +170,10 @@ def main():
                     # incremental average
                     # avg = prev_avg + (new_val - prev_avg) / count
 
-                    H_table[key][inner_key] = H_table[key][inner_key] + (row[a[1]] - H_table[key][inner_key]) / count
+                    H_table[key][inner_key + "_count"] += 1
+                    H_table[key][inner_key] = H_table[key][inner_key] + (row[a[1]] - H_table[key][inner_key]) / H_table[key][inner_key + "_count"]
                 if a[0] == "count":
-                    H_table[key][inner_key] = count
+                    H_table[key][inner_key] += 1
     
     
     ### scan the table n times to compute the aggregation functions of N grouping variables
@@ -198,84 +200,252 @@ def main():
                 elif pred == "or": isOr = True
                 evaluated = False
 
+        if not isAnd and not isOr: isOr = True
         for row in cur:
             for key in H_table.keys():
                 isTrue = isAnd
                 for pred_eval in predicates:
                     #check for grouping variable
                     col_names = [desc[0] for desc in cur.description]
-                    
+                    match_value = ""
+
                     if pred_eval[2] in col_names:
-                        index = col_names.index(pred_eval[2])
-                        pred_eval[2] = key[index]
-                        print(pred_eval[2])
+                        index = v.index(pred_eval[2])
+                        match_value = key[index]
+                    elif pred_eval[2] in H_table[key].keys():
+                        # TODO
+                        match_value = H_table[key][pred_eval[2]]
+                    else: match_value = pred_eval[2]
+                    
                     if(pred_eval[1] == "="):
                         if isAnd:
-                            if row[pred_eval[0]] != pred_eval[2]: 
+                            if row[pred_eval[0]] != match_value: 
                                 isTrue = False
                                 break 
                         elif isOr:
-                            if row[pred_eval[0]] == pred_eval[2]: #true
+                            if row[pred_eval[0]] == match_value: #true
                                 isTrue = True
                                 break
                     elif(pred_eval[1] == "<"):
                         if isAnd:
-                            if row[pred_eval[0]] > pred_eval[2]: 
+                            if row[pred_eval[0]] >= match_value: 
                                 isTrue = False
                                 break 
                         elif isOr:
-                            if row[pred_eval[0]] < pred_eval[2]: #true
+                            if row[pred_eval[0]] < match_value: #true
                                 IsTrue = True
                                 break
                     elif(pred_eval[1] == ">"):
                         if isAnd:
-                            if row[pred_eval[0]] < pred_eval[2]: 
+                            if row[pred_eval[0]] <= match_value: 
                                 isTrue = False
                                 break 
                         elif isOr:
-                            if row[pred_eval[0]] > pred_eval[2]: #true
+                            if row[pred_eval[0]] > match_value: #true
                                 isTrue = True
                                 break
                     elif(pred_eval[1] == "<="):
                         if isAnd:
-                            if row[pred_eval[0]] > pred_eval[2]: 
+                            if row[pred_eval[0]] > match_value: 
                                 isTrue = False
                                 break 
                         elif isOr:
-                            if row[pred_eval[0]] <= pred_eval[2]: #true
+                            if row[pred_eval[0]] <= match_value: #true
                                 isTrue = True
                                 break
                     elif(pred_eval[1] == ">="):
                         if isAnd:
-                            if row[pred_eval[0]] < pred_eval[2]: 
+                            if row[pred_eval[0]] < match_value: 
                                 isTrue = False
                                 break 
                         elif isOr:
-                            if row[pred_eval[0]] >= pred_eval[2]: #true
+                            if row[pred_eval[0]] >= match_value: #true
                                 isTrue = True
                                 break
                     elif(pred_eval[1] == "!="):
                         if isAnd:
-                            if row[pred_eval[0]] == pred_eval[2]: #false
+                            if row[pred_eval[0]] == match_value: #false
                                 isTrue = False
                                 break 
                         elif isOr:
-                            if row[pred_eval[0]] != pred_eval[2]: #true
+                            if row[pred_eval[0]] != match_value: #true
                                 isTrue = True
                                 break
                 if not isTrue:
                     continue
+                
+                for attr in F[i+1]:
+                    inner_key = attr
+                    a = attr.split("_")
+                    if inner_key not in H_table[key]: 
+                        H_table[key][inner_key] = {}        
+                    if a[0] == "min":
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "max":
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "sum":
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "avg":
+                        H_table[key][inner_key + "_count"] = 1
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "count":
+                        H_table[key][inner_key] = 1
+                else:
+                    for attr in F[i+1]:
+                        inner_key = attr
+                        a = attr.split("_")    
+                        if a[0] == "min":
+                            H_table[key][inner_key] = min(row[a[2]], H_table[key][inner_key])
+                        if a[0] == "max":
+                            H_table[key][inner_key] = max(row[a[2]], H_table[key][inner_key])
+                        if a[0] == "sum":
+                            H_table[key][inner_key] += row[a[2]]
+                        if a[0] == "avg":
+                            # incremental average
+                            # avg = prev_avg + (new_val - prev_avg) / count
+
+                            H_table[key][inner_key + "_count"] += 1
+                            H_table[key][inner_key] = H_table[key][inner_key] + (row[a[2]] - H_table[key][inner_key]) / H_table[key][inner_key + "_count"]
+                        if a[0] == "count":
+                            H_table[key][inner_key] += 1
                 result.append(row)
             #update H_table
         #print(result)  
 
+    def eval_having(pred):
+    # This function should take in a predicate and evaluate it. It should return True or False.
+        # pred = pred.split(".")[1]
+        attr = re.split(r'(<=|>=|!=|<|>|=)', pred)
+        
+        attr[2] = attr[2].replace(" ", "")
+        attr[2] = re.split(r'(\+|\-|\*|\/)', attr[2])
+        
+        return attr
+    
+    def eval_sub(subexpr, key):
+        i = 0
+        isOperator = False
+        operator = ""
+        value = None
+        while i < len(subexpr):
+            if isOperator:
+                operator = subexpr[i]
+                isOperator = False
+            else:
+                temp = 0
+                try:
+                    temp = float(subexpr[i])
+                except ValueError:
+                    temp = H_table[key][subexpr[i]]
+                if i == 0: value = temp
+                else:
+                    if operator == "+":
+                        value += temp
+                    elif operator == "-":
+                        value -= temp
+                    elif operator == "*":
+                        value *= temp
+                    elif operator == "/":
+                        value /= temp
+                    else:
+                        raise ValueError("Unknown operator: " + operator)
+                isOperator = True    
+            i += 1
+        return value
 
-        # HAVING Clause
-        # iterate through results
-        # whatever matches the having clause update value in H_table
+    # HAVING Clause
+    # iterate through H_table
+    # if row satisfies having, select based on S
+    output = []
 
+    for key in H_table.keys():
+        having_conds = []
+        evaluated = False
+        isAnd = False
+        isOr = False
+        for cond in G:
+            if not evaluated:
+                e_cond = eval_having(cond)
+                e_cond[2] = eval_sub(e_cond[2], key)
+                having_conds.append(e_cond)
+                evaluated = True
+            else:
+                if cond == "and": isAnd = True
+                elif cond == "or": isOr = True
+                evaluated = False
+        
+        # TODO: continue
+        isMatch = isAnd
+        for cond in having_conds:
+            table_value = H_table[key][cond[0].strip()]
+            cond_value = cond[2]
+            if cond[1] == "=":
+                if isAnd:
+                    if table_value != cond_value:
+                        isMatch = False
+                        break
+                else:
+                    if table_value == cond_value:
+                        isMatch = True
+                        break
+            elif cond[1] == "<":
+                if isAnd:
+                    if table_value >= cond_value:
+                        isMatch = False
+                        break
+                else:
+                    if table_value < cond_value:
+                        isMatch = True
+                        break
+            elif cond[1] == ">":
+                if isAnd:
+                    if table_value <= cond_value:
+                        isMatch = False
+                        break
+                else:
+                    if table_value > cond_value:
+                        isMatch = True
+                        break
+            elif cond[1] == "<=":
+                if isAnd:
+                    if table_value > cond_value:
+                        isMatch = False
+                        break
+                else:
+                    if table_value <= cond_value:
+                        isMatch = True
+                        break
+            elif cond[1] == ">=":
+                if isAnd:
+                    if table_value < cond_value:
+                        isMatch = False
+                        break
+                else:
+                    if table_value >= cond_value:
+                        isMatch = True
+                        break
+            elif cond[1] == "!=":
+                if isAnd:
+                    if table_value == cond_value:
+                        isMatch = False
+                        break
+                else:
+                    if table_value != cond_value:
+                        isMatch = True
+                        break
+        if G and not isMatch: continue
+        group = []
+        for attr in S:
+            value = None
+            if attr in v: value = key[v.index(attr)]
+            else: value = H_table[key][attr]
+            group.append(value)
+        output.append(group)
+    print(output)
+        
 
     """
+
 
     # Note: The f allows formatting with variables.
     #       Also, note the indentation is preserved.

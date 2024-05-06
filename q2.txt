@@ -1,0 +1,5 @@
+cust,prod, avg_quant, count_quant, min_quant
+0
+cust, prod
+avg_quant, count_quant, min_quant
+count_quant > 120
