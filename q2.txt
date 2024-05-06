@@ -1,5 +1,8 @@
-cust,prod, avg_quant, count_quant, min_quant
-0
-cust, prod
-avg_quant, count_quant, min_quant
-count_quant > 120
+cust,month,count_1_quant,count_2_quant
+2
+cust, month
+
+count_1_quant
+count_2_quant
+1.cust=cust and 1.month=month
+2.cust=cust and 2.month=month
