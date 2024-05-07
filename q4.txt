@@ -1,8 +1,8 @@
-cust,year,count_1_quant,count_2_quant
+cust,year,count_1_quant,count_2_*
 2
 cust, year
 
 count_1_quant
-count_2_quant
+count_2_*
 1.cust=cust and 1.year>year
 2.cust=cust and 2.year<year
