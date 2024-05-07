@@ -309,9 +309,9 @@ def query():
                     
                     #indent error ewwww
                     # only call for loop if not already in H_table
-                for attr in F[i+1]:
-                    inner_key = attr
-                    a = attr.split("_")
+                    # for attr in F[i+1]:
+                    #     inner_key = attr
+                    #     a = attr.split("_")
                     # if inner_key not in H_table[key]: 
                     #     H_table[key][inner_key] = {}  
                     # if a[0] == "min":

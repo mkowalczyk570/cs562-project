@@ -3,7 +3,7 @@ import subprocess
 
 
 def main():
-    """
+#    """
     This is the generator code. It should take in the MF structure and generate the code
     needed to run the query. That generated code should be saved to a 
     file (e.g. _generated.py) and then run.
@@ -270,47 +270,29 @@ def main():
                                 isTrue = True
                                 break
                                 
+                if not isTrue: # if fails passes (AND or OR conditions)
+                    continue # skip to next key
+                    
+                # only call for loop if not already in H_table
                 for attr in F[i+1]:
                     inner_key = attr
                     a = attr.split("_")
                     if inner_key not in H_table[key]: 
                         H_table[key][inner_key] = {}  
-                        if a[0] == "min":
-                            H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "max":
-                            H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "sum":
-                            H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "avg":
-                            H_table[key][inner_key + "_count"] = 1
-                            H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "count":
-                            H_table[key][inner_key] = 0
-                
-                if not isTrue: # if fails passes (AND or OR conditions)
-                    continue # skip to next key
-                    
-                    #indent error ewwww
-                    # only call for loop if not already in H_table
-                for attr in F[i+1]:
-                    inner_key = attr
-                    a = attr.split("_")
-                    # if inner_key not in H_table[key]: 
-                    #     H_table[key][inner_key] = {}  
-                    # if a[0] == "min":
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "max":
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "sum":
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "avg":
-                    #     H_table[key][inner_key + "_count"] = 1
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "count":
-                    #     if key == ('Dan',):
-                    #         print("Dan the man")
-                    #         print(inner_key)
-                    #     H_table[key][inner_key] = 1
+                    if a[0] == "min":
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "max":
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "sum":
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "avg":
+                        H_table[key][inner_key + "_count"] = 1
+                        H_table[key][inner_key] = row[a[2]]
+                    if a[0] == "count":
+                        # if key == ('Dan',):
+                        #     print("Dan the man")
+                        #     print(inner_key)
+                        H_table[key][inner_key] = 1
                 else:
                     for attr in F[i+1]:
                         inner_key = attr
@@ -465,7 +447,14 @@ def main():
             if attr in v: 
                 value = key[v.index(attr)]
             else:
-                value = H_table[key][attr]
+                a = attr.split('_')
+                if a[0] in ['min', 'max', 'sum']:
+                    pass
+                elif a[0] == "avg":
+                    count = H_table[key][attr + "_count"]
+                    value = H_table[key][attr] if count > 0 else ''
+                else:
+                    value = H_table[key][attr]
                 # if value == {}:
                 #     value = 0
             group.append(value)
