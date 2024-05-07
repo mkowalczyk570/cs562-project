@@ -462,7 +462,7 @@ def query():
                 value = key[v.index(attr)]
             else:
                 default = 0 if attr.split("_", 1)[0] == "count" else ''
-                value = H_table[key].get(attr, default); print("hi")
+                value = H_table[key].get(attr, default)
                 # if value == {}:
                 #     value = 0
             group.append(value)
