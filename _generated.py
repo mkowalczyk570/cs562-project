@@ -287,6 +287,10 @@ def query():
                                 isTrue = True
                                 break
                                 
+                if not isTrue: # if fails passes (AND or OR conditions)
+                    continue # skip to next key
+                    
+                # only call for loop if not already in H_table
                 for attr in F[i+1]:
                     inner_key = attr
                     a = attr.split("_")
@@ -294,57 +298,32 @@ def query():
                         H_table[key][inner_key] = {}  
                         if a[0] == "min":
                             H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "max":
+                        elif a[0] == "max":
                             H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "sum":
+                        elif a[0] == "sum":
                             H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "avg":
+                        elif a[0] == "avg":
                             H_table[key][inner_key + "_count"] = 1
                             H_table[key][inner_key] = row[a[2]]
-                        if a[0] == "count":
-                            H_table[key][inner_key] = 0
-                
-                if not isTrue: # if fails passes (AND or OR conditions)
-                    continue # skip to next key
-                    
-                    #indent error ewwww
-                    # only call for loop if not already in H_table
-                    # for attr in F[i+1]:
-                    #     inner_key = attr
-                    #     a = attr.split("_")
-                    # if inner_key not in H_table[key]: 
-                    #     H_table[key][inner_key] = {}  
-                    # if a[0] == "min":
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "max":
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "sum":
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "avg":
-                    #     H_table[key][inner_key + "_count"] = 1
-                    #     H_table[key][inner_key] = row[a[2]]
-                    # if a[0] == "count":
-                    #     if key == ('Dan',):
-                    #         print("Dan the man")
-                    #         print(inner_key)
-                    #     H_table[key][inner_key] = 1
-                else:
-                    for attr in F[i+1]:
-                        inner_key = attr
-                        a = attr.split("_")    
+                        elif a[0] == "count":
+                            # if key == ('Dan',):
+                            #     print("Dan the man")
+                            #     print(inner_key)
+                            H_table[key][inner_key] = 1
+                    else:
                         if a[0] == "min":
                             H_table[key][inner_key] = min(row[a[2]], H_table[key][inner_key])
-                        if a[0] == "max":
+                        elif a[0] == "max":
                             H_table[key][inner_key] = max(row[a[2]], H_table[key][inner_key])
-                        if a[0] == "sum":
+                        elif a[0] == "sum":
                             H_table[key][inner_key] += row[a[2]]
-                        if a[0] == "avg":
+                        elif a[0] == "avg":
                             # incremental average
                             # avg = prev_avg + (new_val - prev_avg) / count
 
                             H_table[key][inner_key + "_count"] += 1
                             H_table[key][inner_key] = H_table[key][inner_key] + (row[a[2]] - H_table[key][inner_key]) / H_table[key][inner_key + "_count"]
-                        if a[0] == "count":
+                        elif a[0] == "count":
                             H_table[key][inner_key] += 1
                 result.append(row)
             #update H_table
@@ -482,7 +461,8 @@ def query():
             if attr in v: 
                 value = key[v.index(attr)]
             else:
-                value = H_table[key][attr]
+                default = 0 if attr.split("_", 1)[0] == "count" else ''
+                value = H_table[key].get(attr, default); print("hi")
                 # if value == {}:
                 #     value = 0
             group.append(value)
