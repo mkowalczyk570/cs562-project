@@ -1,0 +1,10 @@
+cust,count_1_quant,count_2_quant,count_3_quant
+3
+cust
+
+count_1_quant
+count_2_quant
+count_3_quant
+1.cust=cust and 1.state=NY
+2.cust=cust and 2.state=CT
+3.cust=cust and 3.state=NJ
