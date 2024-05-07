@@ -285,10 +285,7 @@ def main():
                             H_table[key][inner_key + "_count"] = 1
                             H_table[key][inner_key] = row[a[2]]
                         if a[0] == "count":
-                            if key == ('Dan',):
-                                print("Dan the man")
-                                print(inner_key)
-                            H_table[key][inner_key] = 1
+                            H_table[key][inner_key] = 0
                 
                 if not isTrue: # if fails passes (AND or OR conditions)
                     continue # skip to next key
