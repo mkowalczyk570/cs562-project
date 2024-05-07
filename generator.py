@@ -454,6 +454,8 @@ def main():
                 value = key[v.index(attr)]
             else:
                 value = H_table[key][attr]
+                if value == {}:
+                    value = 0
             group.append(value)
         output.add_row(group)
     print(output)
