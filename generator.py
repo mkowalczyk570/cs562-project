@@ -105,7 +105,7 @@ def main():
             #         print("Invalid input")
             #         break
 
-    
+            
     ### Create H-Table - holds grouping attributes (v) and aggregation functions (F)
     H_table= {};
     grouping_attributes = []
@@ -174,7 +174,6 @@ def main():
                 if a[0] == "count":
                     H_table[key][inner_key] += 1
     
-    print(H_table)
     ### scan the table n times to compute the aggregation functions of N grouping variables
     for i in range(n):
         cur.execute("SELECT * FROM sales")
@@ -208,7 +207,7 @@ def main():
                     col_names = [desc[0] for desc in cur.description]
                     match_value = ""
 
-                    if pred_eval[2] in col_names:
+                    if pred_eval[2] in col_names: #matching on grouping variable
                         index = v.index(pred_eval[2])
                         match_value = key[index]
                     elif pred_eval[2] in H_table[key].keys():
@@ -236,7 +235,7 @@ def main():
                                 break
                     elif(pred_eval[1] == ">"):
                         if isAnd:
-                            if row[pred_eval[0]] <= match_value: 
+                            if row[pred_eval[0]] <= match_value: #when matching on month but current month in grouping attribute is 12 this will never be true
                                 isTrue = False
                                 break 
                         elif isOr:
@@ -270,14 +269,25 @@ def main():
                             if row[pred_eval[0]] != match_value: #true
                                 isTrue = True
                                 break
-                if not isTrue:
-                    continue
-                
+                                
                 for attr in F[i+1]:
                     inner_key = attr
                     a = attr.split("_")
                     if inner_key not in H_table[key]: 
-                        H_table[key][inner_key] = {}        
+                        H_table[key][inner_key] = {}  
+                
+                if not isTrue:
+                    # if key == ('Chae', 12):
+                    #     print(isTrue)
+                    #     print(F[i+1])
+                    #     print()
+                    continue
+                    
+                for attr in F[i+1]:
+                    inner_key = attr
+                    a = attr.split("_")
+                    # if inner_key not in H_table[key]: 
+                    #     H_table[key][inner_key] = {}  
                     if a[0] == "min":
                         H_table[key][inner_key] = row[a[2]]
                     if a[0] == "max":
@@ -310,7 +320,9 @@ def main():
                 result.append(row)
             #update H_table
         #print(result)  
-
+    
+    print(H_table)
+#----------------------------------------------------------------------------------------------------------------------------------
     def eval_having(pred):
     # This function should take in a predicate and evaluate it. It should return True or False.
         # pred = pred.split(".")[1]
@@ -363,6 +375,7 @@ def main():
         evaluated = False
         isAnd = False
         isOr = False
+        # NOT GETTING HERE
         for cond in G:
             if not evaluated:
                 e_cond = eval_having(cond)
@@ -437,8 +450,10 @@ def main():
         group = []
         for attr in S:
             value = None
-            if attr in v: value = key[v.index(attr)]
-            else: value = H_table[key][attr]
+            if attr in v: 
+                value = key[v.index(attr)]
+            else:
+                value = H_table[key][attr]
             group.append(value)
         output.add_row(group)
     print(output)
