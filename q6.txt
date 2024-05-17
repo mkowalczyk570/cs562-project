@@ -1,0 +1,6 @@
+cust, min_1_quant, max_1_quant, sum_1_quant, avg_1_quant, count_1_*
+1
+cust
+
+min_1_quant, max_1_quant, sum_1_quant, avg_1_quant, count_1_*
+1.cust=cust and 1.month=13

@@ -1,0 +1,9 @@
+cust,prod, sum_1_quant, sum_2_quant
+2
+cust, prod
+avg_quant, min_quant
+sum_1_quant
+sum_2_quant
+1.state=NY and 1.cust=Dan and 1.prod=prod
+2.state=NJ and 2.cust=Claire and 2.prod=prod
+sum_1_quant>0.5 * sum_2_quant or min_quant > 0

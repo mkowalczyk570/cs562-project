@@ -11,3 +11,5 @@ def test_generator():
     # Compare the output of your generated code to the output of the actual SQL query
     # Note: This only works for standard queries, not ESQL queries.
     assert _generated() == sql()
+
+test_generator()

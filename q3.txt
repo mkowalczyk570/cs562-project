@@ -1,0 +1,8 @@
+cust,month,avg_1_quant,avg_2_quant
+2
+cust, month
+
+avg_1_quant
+avg_2_quant
+1.cust=cust and 1.month>month
+2.cust=cust and 2.month<month
